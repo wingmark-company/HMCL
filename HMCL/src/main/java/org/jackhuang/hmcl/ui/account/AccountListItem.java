@@ -34,7 +34,6 @@ import org.jackhuang.hmcl.auth.AuthenticationException;
 import org.jackhuang.hmcl.auth.CredentialExpiredException;
 import org.jackhuang.hmcl.auth.authlibinjector.AuthlibInjectorAccount;
 import org.jackhuang.hmcl.auth.authlibinjector.AuthlibInjectorServer;
-import org.jackhuang.hmcl.auth.offline.OfflineAccount;
 import org.jackhuang.hmcl.auth.yggdrasil.CompleteGameProfile;
 import org.jackhuang.hmcl.auth.yggdrasil.TextureType;
 import org.jackhuang.hmcl.auth.yggdrasil.YggdrasilAccount;
@@ -86,13 +85,9 @@ public class AccountListItem extends RadioButton {
         }
 
         StringBinding characterName = Bindings.createStringBinding(account::getCharacter, account);
-        if (account instanceof OfflineAccount) {
-            title.bind(characterName);
-        } else {
-            title.bind(
-                    account.getUsername().isEmpty() ? characterName :
-                            Bindings.concat(account.getUsername(), " - ", characterName));
-        }
+        title.bind(
+                account.getUsername().isEmpty() ? characterName :
+                        Bindings.concat(account.getUsername(), " - ", characterName));
 
         image.bind(TexturesLoader.fxAvatarBinding(account, 32));
     }
@@ -137,8 +132,6 @@ public class AccountListItem extends RadioButton {
             } else {
                 return createBooleanBinding(() -> true);
             }
-        } else if (account instanceof OfflineAccount) {
-            return createBooleanBinding(() -> true);
         } else {
             return createBooleanBinding(() -> false);
         }
@@ -149,10 +142,6 @@ public class AccountListItem extends RadioButton {
      */
     @Nullable
     public Task<?> uploadSkin() {
-        if (account instanceof OfflineAccount) {
-            Controllers.dialog(new OfflineAccountSkinPane((OfflineAccount) account));
-            return null;
-        }
         if (!(account instanceof YggdrasilAccount)) {
             return null;
         }

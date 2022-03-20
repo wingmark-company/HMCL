@@ -40,8 +40,6 @@ import org.jackhuang.hmcl.auth.CharacterSelector;
 import org.jackhuang.hmcl.auth.NoSelectedCharacterException;
 import org.jackhuang.hmcl.auth.authlibinjector.AuthlibInjectorAccountFactory;
 import org.jackhuang.hmcl.auth.authlibinjector.AuthlibInjectorServer;
-import org.jackhuang.hmcl.auth.microsoft.MicrosoftAccountFactory;
-import org.jackhuang.hmcl.auth.offline.OfflineAccountFactory;
 import org.jackhuang.hmcl.auth.yggdrasil.GameProfile;
 import org.jackhuang.hmcl.auth.yggdrasil.YggdrasilAccountFactory;
 import org.jackhuang.hmcl.auth.yggdrasil.YggdrasilService;
@@ -59,13 +57,11 @@ import org.jackhuang.hmcl.ui.WeakListenerHolder;
 import org.jackhuang.hmcl.ui.construct.*;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.gson.UUIDTypeAdapter;
-import org.jackhuang.hmcl.util.javafx.BindingMapping;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import static java.util.Collections.emptyList;
@@ -79,21 +75,18 @@ import static org.jackhuang.hmcl.util.javafx.ExtendedProperties.classPropertyFor
 
 public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
 
-    private boolean showMethodSwitcher;
-    private AccountFactory<?> factory;
-
+    private static final String MICROSOFT_ACCOUNT_EDIT_PROFILE_URL = "https://support.microsoft.com/zh-cn/account-billing/%E5%A6%82%E4%BD%95%E6%9B%B4%E6%94%B9-microsoft-%E5%B8%90%E6%88%B7%E4%B8%8A%E7%9A%84%E5%87%BA%E7%94%9F%E6%97%A5%E6%9C%9F-837badbc-999e-54d2-2617-d19206b9540a";
     private final Label lblErrorMessage;
     private final JFXButton btnAccept;
     private final SpinnerPane spinner;
     private final Node body;
-
-    private Node detailsPane; // AccountDetailsInputPane for Offline / Mojang / authlib-injector, Label for Microsoft
     private final Pane detailsContainer;
-
     private final BooleanProperty logging = new SimpleBooleanProperty();
     private final ObjectProperty<OAuthServer.GrantDeviceCodeEvent> deviceCode = new SimpleObjectProperty<>();
     private final WeakListenerHolder holder = new WeakListenerHolder();
-
+    private boolean showMethodSwitcher;
+    private AccountFactory<?> factory;
+    private Node detailsPane; // AccountDetailsInputPane for Offline / Mojang / authlib-injector, Label for Microsoft
     private TaskExecutor loginTask;
 
     public CreateAccountPane() {
@@ -107,7 +100,7 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
             try {
                 factory = Accounts.getAccountFactory(preferred);
             } catch (IllegalArgumentException e) {
-                factory = Accounts.FACTORY_OFFLINE;
+                factory = Accounts.FACTORY_AUTHLIB_INJECTOR;
             }
         } else {
             showMethodSwitcher = false;
@@ -203,10 +196,6 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
         spinner.showSpinner();
         lblErrorMessage.setText("");
 
-        if (!(factory instanceof MicrosoftAccountFactory)) {
-            body.setDisable(true);
-        }
-
         String username;
         String password;
         Object additionalData;
@@ -265,80 +254,29 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
             detailsContainer.getChildren().remove(detailsPane);
             lblErrorMessage.setText("");
         }
-        if (factory == Accounts.FACTORY_MICROSOFT) {
-            VBox vbox = new VBox(8);
-            HintPane hintPane = new HintPane(MessageDialogPane.MessageType.INFO);
-            FXUtils.onChangeAndOperate(deviceCode, deviceCode -> {
-                if (deviceCode != null) {
-                    FXUtils.copyText(deviceCode.getUserCode());
-                    hintPane.setSegment(i18n("account.methods.microsoft.manual", deviceCode.getUserCode(), deviceCode.getVerificationUri()));
-                } else {
-                    hintPane.setSegment(i18n("account.methods.microsoft.hint"));
-                }
-            });
-            hintPane.setOnMouseClicked(e -> {
-                if (deviceCode.get() != null) {
-                    FXUtils.copyText(deviceCode.get().getUserCode());
-                }
-            });
-
-            holder.add(Accounts.OAUTH_CALLBACK.onGrantDeviceCode.registerWeak(value -> {
-                runInFX(() -> deviceCode.set(value));
-            }));
-
-            HBox box = new HBox(8);
-            JFXHyperlink birthLink = new JFXHyperlink(i18n("account.methods.microsoft.birth"));
-            birthLink.setOnAction(e -> FXUtils.openLink("https://support.microsoft.com/zh-cn/account-billing/如何更改-microsoft-帐户上的出生日期-837badbc-999e-54d2-2617-d19206b9540a"));
-            JFXHyperlink profileLink = new JFXHyperlink(i18n("account.methods.microsoft.profile"));
-            profileLink.setOnAction(e -> FXUtils.openLink("https://account.live.com/editprof.aspx"));
-            JFXHyperlink purchaseLink = new JFXHyperlink(i18n("account.methods.yggdrasil.purchase"));
-            purchaseLink.setOnAction(e -> FXUtils.openLink(YggdrasilService.PURCHASE_URL));
-            box.getChildren().setAll(profileLink, birthLink, purchaseLink);
-            GridPane.setColumnSpan(box, 2);
-
-            vbox.getChildren().setAll(hintPane, box);
-
-            detailsPane = vbox;
-            btnAccept.setDisable(false);
-        } else {
-            detailsPane = new AccountDetailsInputPane(factory, btnAccept::fire);
-            btnAccept.disableProperty().bind(((AccountDetailsInputPane) detailsPane).validProperty().not());
-        }
+        detailsPane = new AccountDetailsInputPane(factory, btnAccept::fire);
+        btnAccept.disableProperty().bind(((AccountDetailsInputPane) detailsPane).validProperty().not());
         detailsContainer.getChildren().add(detailsPane);
+    }
+
+    @Override
+    public void onDialogShown() {
+        if (detailsPane instanceof AccountDetailsInputPane) {
+            ((AccountDetailsInputPane) detailsPane).focus();
+        }
     }
 
     private static class AccountDetailsInputPane extends GridPane {
 
         // ==== authlib-injector hyperlinks ====
-        private static final String[] ALLOWED_LINKS = { "register" };
-
-        private static List<Hyperlink> createHyperlinks(AuthlibInjectorServer server) {
-            if (server == null) {
-                return emptyList();
-            }
-
-            Map<String, String> links = server.getLinks();
-            List<Hyperlink> result = new ArrayList<>();
-            for (String key : ALLOWED_LINKS) {
-                String value = links.get(key);
-                if (value != null) {
-                    Hyperlink link = new Hyperlink(i18n("account.injector.link." + key));
-                    FXUtils.installSlowTooltip(link, value);
-                    link.setOnAction(e -> FXUtils.openLink(value));
-                    result.add(link);
-                }
-            }
-            return unmodifiableList(result);
-        }
-        // =====
-
+        private static final String[] ALLOWED_LINKS = {"register"};
         private AccountFactory<?> factory;
+        // =====
         private @Nullable JFXComboBox<AuthlibInjectorServer> cboServers;
         private @Nullable JFXTextField txtUsername;
         private @Nullable JFXPasswordField txtPassword;
         private @Nullable JFXTextField txtUUID;
         private BooleanBinding valid;
-
         public AccountDetailsInputPane(AccountFactory<?> factory, Runnable onAction) {
             this.factory = factory;
 
@@ -430,69 +368,6 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
                 rowIndex++;
             }
 
-            if (factory instanceof YggdrasilAccountFactory) {
-                HBox box = new HBox();
-                GridPane.setColumnSpan(box, 2);
-
-                JFXHyperlink migrationLink = new JFXHyperlink(i18n("account.methods.yggdrasil.migration"));
-                migrationLink.setOnAction(e -> FXUtils.openLink(YggdrasilService.PROFILE_URL));
-
-                JFXHyperlink migrationHowLink = new JFXHyperlink(i18n("account.methods.yggdrasil.migration.how"));
-                migrationHowLink.setOnAction(e -> FXUtils.openLink(YggdrasilService.MIGRATION_FAQ_URL));
-
-                JFXHyperlink purchaseLink = new JFXHyperlink(i18n("account.methods.yggdrasil.purchase"));
-                purchaseLink.setOnAction(e -> FXUtils.openLink(YggdrasilService.PURCHASE_URL));
-
-                box.getChildren().setAll(migrationLink, migrationHowLink, purchaseLink);
-                add(box, 0, rowIndex);
-
-                rowIndex++;
-            }
-
-            if (factory instanceof OfflineAccountFactory) {
-                JFXHyperlink purchaseLink = new JFXHyperlink(i18n("account.methods.yggdrasil.purchase"));
-                purchaseLink.setOnAction(e -> FXUtils.openLink(YggdrasilService.PURCHASE_URL));
-                HBox linkPane = new HBox(purchaseLink);
-                GridPane.setColumnSpan(linkPane, 2);
-                add(linkPane, 0, rowIndex);
-
-                rowIndex++;
-
-                HBox box = new HBox();
-                MenuUpDownButton advancedButton = new MenuUpDownButton();
-                box.getChildren().setAll(advancedButton);
-                advancedButton.setText(i18n("settings.advanced"));
-                GridPane.setColumnSpan(box, 2);
-                add(box, 0, rowIndex);
-
-                rowIndex++;
-
-                Label lblUUID = new Label(i18n("account.methods.offline.uuid"));
-                lblUUID.managedProperty().bind(advancedButton.selectedProperty());
-                lblUUID.visibleProperty().bind(advancedButton.selectedProperty());
-                setHalignment(lblUUID, HPos.LEFT);
-                add(lblUUID, 0, rowIndex);
-
-                txtUUID = new JFXTextField();
-                txtUUID.managedProperty().bind(advancedButton.selectedProperty());
-                txtUUID.visibleProperty().bind(advancedButton.selectedProperty());
-                txtUUID.setValidators(new UUIDValidator());
-                txtUUID.promptTextProperty().bind(BindingMapping.of(txtUsername.textProperty()).map(name -> OfflineAccountFactory.getUUIDFromUserName(name).toString()));
-                txtUUID.setOnAction(e -> onAction.run());
-                add(txtUUID, 1, rowIndex);
-
-                rowIndex++;
-
-                HintPane hintPane = new HintPane(MessageDialogPane.MessageType.WARNING);
-                hintPane.managedProperty().bind(advancedButton.selectedProperty());
-                hintPane.visibleProperty().bind(advancedButton.selectedProperty());
-                hintPane.setText(i18n("account.methods.offline.uuid.hint"));
-                GridPane.setColumnSpan(hintPane, 2);
-                add(hintPane, 0, rowIndex);
-
-                rowIndex++;
-            }
-
             valid = new BooleanBinding() {
                 {
                     if (cboServers != null)
@@ -520,6 +395,25 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
             };
         }
 
+        private static List<Hyperlink> createHyperlinks(AuthlibInjectorServer server) {
+            if (server == null) {
+                return emptyList();
+            }
+
+            Map<String, String> links = server.getLinks();
+            List<Hyperlink> result = new ArrayList<>();
+            for (String key : ALLOWED_LINKS) {
+                String value = links.get(key);
+                if (value != null) {
+                    Hyperlink link = new Hyperlink(i18n("account.injector.link." + key));
+                    FXUtils.installSlowTooltip(link, value);
+                    link.setOnAction(e -> FXUtils.openLink(value));
+                    result.add(link);
+                }
+            }
+            return unmodifiableList(result);
+        }
+
         private boolean requiresEmailAsUsername() {
             if (factory instanceof YggdrasilAccountFactory) {
                 return true;
@@ -535,9 +429,6 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
         public Object getAdditionalData() {
             if (factory instanceof AuthlibInjectorAccountFactory) {
                 return getAuthServer();
-            } else if (factory instanceof OfflineAccountFactory) {
-                UUID uuid = txtUUID == null ? null : StringUtils.isBlank(txtUUID.getText()) ? null : UUIDTypeAdapter.fromString(txtUUID.getText());
-                return new OfflineAccountFactory.AdditionalData(uuid, null);
             } else {
                 return null;
             }
@@ -631,13 +522,6 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
         }
     }
 
-    @Override
-    public void onDialogShown() {
-        if (detailsPane instanceof AccountDetailsInputPane) {
-            ((AccountDetailsInputPane) detailsPane).focus();
-        }
-    }
-
     private static class UUIDValidator extends ValidatorBase {
 
         public UUIDValidator() {
@@ -670,6 +554,4 @@ public class CreateAccountPane extends JFXDialogLayout implements DialogAware {
             }
         }
     }
-
-    private static final String MICROSOFT_ACCOUNT_EDIT_PROFILE_URL = "https://support.microsoft.com/zh-cn/account-billing/%E5%A6%82%E4%BD%95%E6%9B%B4%E6%94%B9-microsoft-%E5%B8%90%E6%88%B7%E4%B8%8A%E7%9A%84%E5%87%BA%E7%94%9F%E6%97%A5%E6%9C%9F-837badbc-999e-54d2-2617-d19206b9540a";
 }
