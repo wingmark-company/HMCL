@@ -23,6 +23,7 @@ import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Cursor;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Skin;
 import javafx.scene.control.Tooltip;
@@ -100,6 +101,8 @@ public class AccountListPage extends DecoratorAnimatedPage implements DecoratorP
                         item.getStyleClass().add("navigation-drawer-item");
                         item.setLeftGraphic(wrap(SVG::server));
                         item.setOnAction(e -> Controllers.dialog(new CreateAccountPane(server)));
+
+                        item.setCursor(Cursor.HAND);
 
                         ObservableValue<String> title = BindingMapping.of(server, AuthlibInjectorServer::getName);
                         item.titleProperty().bind(title);
