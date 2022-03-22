@@ -411,25 +411,6 @@ public final class VersionSetting implements Cloneable {
 
     // Minecraft settings.
 
-    private final StringProperty serverIpProperty = new SimpleStringProperty(this, "serverIp", "");
-
-    public StringProperty serverIpProperty() {
-        return serverIpProperty;
-    }
-
-    /**
-     * The server ip that will be entered after Minecraft successfully loaded ly.
-     * <p>
-     * Format: ip:port or without port.
-     */
-    public String getServerIp() {
-        return serverIpProperty.get();
-    }
-
-    public void setServerIp(String serverIp) {
-        serverIpProperty.set(serverIp);
-    }
-
 
     private final BooleanProperty fullscreenProperty = new SimpleBooleanProperty(this, "fullscreen", false);
 
@@ -671,7 +652,6 @@ public final class VersionSetting implements Cloneable {
         notCheckGameProperty.addListener(listener);
         notCheckJVMProperty.addListener(listener);
         showLogsProperty.addListener(listener);
-        serverIpProperty.addListener(listener);
         fullscreenProperty.addListener(listener);
         widthProperty.addListener(listener);
         heightProperty.addListener(listener);
@@ -707,7 +687,6 @@ public final class VersionSetting implements Cloneable {
         versionSetting.setNotCheckGame(isNotCheckGame());
         versionSetting.setNotCheckJVM(isNotCheckJVM());
         versionSetting.setShowLogs(isShowLogs());
-        versionSetting.setServerIp(getServerIp());
         versionSetting.setFullscreen(isFullscreen());
         versionSetting.setWidth(getWidth());
         versionSetting.setHeight(getHeight());
@@ -740,7 +719,6 @@ public final class VersionSetting implements Cloneable {
             obj.addProperty("javaDir", src.getJavaDir());
             obj.addProperty("precalledCommand", src.getPreLaunchCommand());
             obj.addProperty("postExitCommand", src.getPostExitCommand());
-            obj.addProperty("serverIp", src.getServerIp());
             obj.addProperty("java", src.getJava());
             obj.addProperty("wrapper", src.getWrapper());
             obj.addProperty("fullscreen", src.isFullscreen());
@@ -784,7 +762,6 @@ public final class VersionSetting implements Cloneable {
             vs.setHeight(Optional.ofNullable(obj.get("height")).map(JsonElement::getAsJsonPrimitive).map(this::parseJsonPrimitive).orElse(0));
             vs.setJavaDir(Optional.ofNullable(obj.get("javaDir")).map(JsonElement::getAsString).orElse(""));
             vs.setPreLaunchCommand(Optional.ofNullable(obj.get("precalledCommand")).map(JsonElement::getAsString).orElse(""));
-            vs.setServerIp(Optional.ofNullable(obj.get("serverIp")).map(JsonElement::getAsString).orElse(""));
             vs.setJava(Optional.ofNullable(obj.get("java")).map(JsonElement::getAsString).orElse(""));
             vs.setWrapper(Optional.ofNullable(obj.get("wrapper")).map(JsonElement::getAsString).orElse(""));
             vs.setGameDir(Optional.ofNullable(obj.get("gameDir")).map(JsonElement::getAsString).orElse(""));

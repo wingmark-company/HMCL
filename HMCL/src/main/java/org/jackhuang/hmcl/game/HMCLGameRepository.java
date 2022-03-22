@@ -349,7 +349,6 @@ public class HMCLGameRepository extends DefaultGameRepository {
                 .setWidth(vs.getWidth())
                 .setHeight(vs.getHeight())
                 .setFullscreen(vs.isFullscreen())
-                .setServerIp(vs.getServerIp())
                 .setWrapper(vs.getWrapper())
                 .setPreLaunchCommand(vs.getPreLaunchCommand())
                 .setPostExitCommand(vs.getPostExitCommand())

@@ -82,7 +82,6 @@ public final class VersionSettingsPage extends StackPane implements DecoratorPag
     private final JFXTextField txtWrapper;
     private final JFXTextField txtPreLaunchCommand;
     private final JFXTextField txtPostExitCommand;
-    private final JFXTextField txtServerIP;
     private final ComponentList componentList;
     private final JFXComboBox<LauncherVisibility> cboLauncherVisibility;
     private final JFXCheckBox chkAutoAllocate;
@@ -384,24 +383,7 @@ public final class VersionSettingsPage extends StackPane implements DecoratorPag
                 FXUtils.setLimitWidth(cboProcessPriority, 300);
             }
 
-            GridPane serverPane = new GridPane();
-            {
-                ColumnConstraints title = new ColumnConstraints();
-                ColumnConstraints value = new ColumnConstraints();
-                value.setFillWidth(true);
-                value.setHgrow(Priority.ALWAYS);
-                value.setHalignment(HPos.RIGHT);
-                serverPane.setHgap(16);
-                serverPane.setVgap(8);
-                serverPane.getColumnConstraints().setAll(title, value);
-
-                txtServerIP = new JFXTextField();
-                txtServerIP.setPromptText(i18n("settings.advanced.server_ip.prompt"));
-                FXUtils.setLimitWidth(txtServerIP, 300);
-                serverPane.addRow(0, new Label(i18n("settings.advanced.server_ip")), txtServerIP);
-            }
-
-            componentList.getContent().setAll(javaSublist, gameDirSublist, maxMemoryPane, launcherVisibilityPane, dimensionPane, showLogsPane, processPriorityPane, serverPane);
+            componentList.getContent().setAll(javaSublist, gameDirSublist, maxMemoryPane, launcherVisibilityPane, dimensionPane, showLogsPane, processPriorityPane);
         }
 
         HBox advancedHintPane = new HBox();
@@ -625,7 +607,6 @@ public final class VersionSettingsPage extends StackPane implements DecoratorPag
             FXUtils.unbindString(txtWrapper, lastVersionSetting.wrapperProperty());
             FXUtils.unbindString(txtPreLaunchCommand, lastVersionSetting.preLaunchCommandProperty());
             FXUtils.unbindString(txtPostExitCommand, lastVersionSetting.postExitCommandProperty());
-            FXUtils.unbindString(txtServerIP, lastVersionSetting.serverIpProperty());
             FXUtils.unbindBoolean(chkAutoAllocate, lastVersionSetting.autoMemoryProperty());
             FXUtils.unbindBoolean(chkFullscreen, lastVersionSetting.fullscreenProperty());
             noGameCheckPane.selectedProperty().unbindBidirectional(lastVersionSetting.notCheckGameProperty());
@@ -664,7 +645,6 @@ public final class VersionSettingsPage extends StackPane implements DecoratorPag
         FXUtils.bindString(txtMetaspace, versionSetting.permSizeProperty());
         FXUtils.bindString(txtWrapper, versionSetting.wrapperProperty());
         FXUtils.bindString(txtPreLaunchCommand, versionSetting.preLaunchCommandProperty());
-        FXUtils.bindString(txtServerIP, versionSetting.serverIpProperty());
         FXUtils.bindBoolean(chkAutoAllocate, versionSetting.autoMemoryProperty());
         FXUtils.bindBoolean(chkFullscreen, versionSetting.fullscreenProperty());
         noGameCheckPane.selectedProperty().bindBidirectional(versionSetting.notCheckGameProperty());
