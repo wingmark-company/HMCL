@@ -61,7 +61,7 @@ public final class Main {
         checkDirectoryPath();
 
         // This environment check will take ~300ms
-        thread(Main::fixLetsEncrypt, "CA Certificate Check", true);
+        thread(Main::fixCerts, "CA Certificate Check", true);
 
         Logging.start(Metadata.PTL_DIRECTORY.resolve("logs"));
 
@@ -123,7 +123,7 @@ public final class Main {
         JOptionPane.showMessageDialog(null, message, "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
-    static void fixLetsEncrypt() {
+    static void fixCerts() {
         try {
             KeyStore defaultKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             Path ksPath = Paths.get(System.getProperty("java.home"), "lib", "security", "cacerts");
@@ -132,15 +132,26 @@ public final class Main {
                 defaultKeyStore.load(ksStream, "changeit".toCharArray());
             }
 
-            KeyStore letsEncryptKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            try (InputStream letsEncryptFile = Main.class.getResourceAsStream("/assets/lekeystore.jks")) {
-                letsEncryptKeyStore.load(letsEncryptFile, "supersecretpassword".toCharArray());
-            }
+            KeyStore owoItKeyStore = getWingmarkCa();
+            KeyStore letsEncryptKeyStore = getLetsEncrypt();
 
             KeyStore merged = KeyStore.getInstance(KeyStore.getDefaultType());
             merged.load(null, new char[0]);
-            for (String alias : Collections.list(letsEncryptKeyStore.aliases()))
-                merged.setCertificateEntry(alias, letsEncryptKeyStore.getCertificate(alias));
+
+            if (owoItKeyStore != null) {
+                for (String alias : Collections.list(owoItKeyStore.aliases()))
+                    merged.setCertificateEntry(alias, owoItKeyStore.getCertificate(alias));
+            } else {
+                LOG.info("owoItKeyStore is null and will not be added");
+            }
+
+            if (letsEncryptKeyStore != null) {
+                for (String alias : Collections.list(letsEncryptKeyStore.aliases()))
+                    merged.setCertificateEntry(alias, letsEncryptKeyStore.getCertificate(alias));
+            } else {
+                LOG.info("letsEncryptKeyStore is null and will not be added");
+            }
+
             for (String alias : Collections.list(defaultKeyStore.aliases()))
                 merged.setCertificateEntry(alias, defaultKeyStore.getCertificate(alias));
 
@@ -149,9 +160,37 @@ public final class Main {
             SSLContext tls = SSLContext.getInstance("TLS");
             tls.init(null, instance.getTrustManagers(), null);
             HttpsURLConnection.setDefaultSSLSocketFactory(tls.getSocketFactory());
-            LOG.info("Added Lets Encrypt root certificates as additional trust");
+            LOG.info("Added additional trust certificates");
         } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException | KeyManagementException e) {
+            LOG.log(Level.SEVERE, "Failed to load certificates. Expect problems", e);
+        }
+    }
+
+    static KeyStore getWingmarkCa() {
+        try {
+            KeyStore owoItKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            try (InputStream owoItFile = Main.class.getResourceAsStream("/assets/wingmark.jks")) {
+                owoItKeyStore.load(owoItFile, "supersecretpassword".toCharArray());
+            }
+
+            return owoItKeyStore;
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+            LOG.log(Level.SEVERE, "Failed to load Wingmark Network CA certificate. Expect problems", e);
+        }
+        return null;
+    }
+
+    static KeyStore getLetsEncrypt() {
+        try {
+            KeyStore letsEncryptKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            try (InputStream letsEncryptFile = Main.class.getResourceAsStream("/assets/lekeystore.jks")) {
+                letsEncryptKeyStore.load(letsEncryptFile, "supersecretpassword".toCharArray());
+            }
+
+            return letsEncryptKeyStore;
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
             LOG.log(Level.SEVERE, "Failed to load lets encrypt certificate. Expect problems", e);
         }
+        return null;
     }
 }
