@@ -119,7 +119,7 @@ public final class Config implements Cloneable, Observable {
     private DoubleProperty height = new SimpleDoubleProperty();
 
     @SerializedName("theme")
-    private ObjectProperty<Theme> theme = new SimpleObjectProperty<>(Theme.BLUE);
+    private ObjectProperty<Theme> theme = new SimpleObjectProperty<>(Theme.PRIMARY);
 
     @SerializedName("localization")
     private ObjectProperty<SupportedLocale> localization = new SimpleObjectProperty<>(Locales.DEFAULT);
