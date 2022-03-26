@@ -141,13 +141,6 @@ public class RootPage extends DecoratorAnimatedPage implements DecoratorPage {
             gameItem.setTitle(i18n("version.manage"));
             gameItem.setOnAction(e -> Controllers.navigate(Controllers.getGameListPage()));
 
-            // forth item in left sidebar
-            AdvancedListItem downloadItem = new AdvancedListItem();
-            downloadItem.setLeftGraphic(wrap(SVG::downloadOutline));
-            downloadItem.setActionButtonVisible(false);
-            downloadItem.setTitle(i18n("download"));
-            downloadItem.setOnAction(e -> Controllers.navigate(Controllers.getDownloadPage()));
-
             // sixth item in left sidebar
             AdvancedListItem launcherSettingsItem = new AdvancedListItem();
             launcherSettingsItem.setLeftGraphic(wrap(SVG::gearOutline));
@@ -162,7 +155,6 @@ public class RootPage extends DecoratorAnimatedPage implements DecoratorPage {
                     .startCategory(i18n("version").toUpperCase())
                     .add(gameListItem)
                     .add(gameItem)
-                    .add(downloadItem)
                     .startCategory(i18n("settings.launcher.general").toUpperCase())
                     .add(launcherSettingsItem);
 
