@@ -40,7 +40,6 @@ import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
 public final class Profiles {
 
-    public static final String DEFAULT_PROFILE = "Default";
     public static final String HOME_PROFILE = "Home";
 
     private Profiles() {
@@ -48,8 +47,6 @@ public final class Profiles {
 
     public static String getProfileDisplayName(Profile profile) {
         switch (profile.getName()) {
-            case Profiles.DEFAULT_PROFILE:
-                return i18n("profile.default");
             case Profiles.HOME_PROFILE:
                 return i18n("profile.home");
             default:
@@ -103,9 +100,8 @@ public final class Profiles {
 
     private static void checkProfiles() {
         if (profiles.isEmpty()) {
-            Profile current = new Profile(Profiles.DEFAULT_PROFILE, new File(".minecraft"), new VersionSetting(), null, true);
             Profile home = new Profile(Profiles.HOME_PROFILE, Metadata.MINECRAFT_DIRECTORY.toFile());
-            Platform.runLater(() -> profiles.addAll(current, home));
+            Platform.runLater(() -> profiles.addAll(home));
         }
     }
 

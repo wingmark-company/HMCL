@@ -46,7 +46,7 @@ public final class Metadata {
 
     public static final String BUILD_CHANNEL = JarUtils.thisJar().flatMap(JarUtils::getManifest).map(manifest -> manifest.getMainAttributes().getValue("Build-Channel")).orElse("nightly");
 
-    public static final Path MINECRAFT_DIRECTORY = OperatingSystem.getWorkingDirectory("minecraft");
+    public static final Path MINECRAFT_DIRECTORY = OperatingSystem.getWorkingDirectory("pixeltailmc");
     public static final Path PTL_DIRECTORY = getPTLDirectory();
 
     private static Path getPTLDirectory() {
