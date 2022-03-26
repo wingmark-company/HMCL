@@ -148,8 +148,6 @@ public class DecoratorController {
                                 } else {
                                     image = new Image(config().getBackgroundImageUrl(), true);
                                 }
-                            } else if (config().getBackgroundImageType() == EnumBackgroundImage.CLASSIC) {
-                                image = newImage("/assets/img/background-classic.jpg");
                             } else if (config().getBackgroundImageType() == EnumBackgroundImage.TRANSLUCENT) {
                                 return new Background(new BackgroundFill(new Color(1, 1, 1, 0.5), CornerRadii.EMPTY, Insets.EMPTY));
                             }
