@@ -69,20 +69,13 @@ public class GameListPage extends DecoratorAnimatedPage implements DecoratorPage
             ScrollPane pane = new ScrollPane();
             VBox.setVgrow(pane, Priority.ALWAYS);
             {
-                AdvancedListItem addProfileItem = new AdvancedListItem();
-                addProfileItem.getStyleClass().add("navigation-drawer-item");
-                addProfileItem.setTitle(i18n("profile.new"));
-                addProfileItem.setActionButtonVisible(false);
-                addProfileItem.setLeftGraphic(VersionPage.wrap(SVG::plusCircleOutline));
-                addProfileItem.setOnAction(e -> Controllers.navigate(new ProfilePage(null)));
-
                 pane.setFitToWidth(true);
                 VBox wrapper = new VBox();
                 wrapper.getStyleClass().add("advanced-list-box-content");
                 VBox box = new VBox();
                 box.setFillWidth(true);
                 Bindings.bindContent(box.getChildren(), profileListItems);
-                wrapper.getChildren().setAll(box, addProfileItem);
+                wrapper.getChildren().setAll(box);
                 pane.setContent(wrapper);
             }
 
