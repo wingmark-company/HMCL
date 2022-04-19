@@ -106,7 +106,8 @@ public class Theme {
 
         return new String[]{
                 css,
-                "/assets/css/root.css"
+                "/assets/css/root.css",
+                "/assets/css/ptlauncher.css"
         };
     }
 
