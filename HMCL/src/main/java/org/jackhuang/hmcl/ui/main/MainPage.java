@@ -45,6 +45,7 @@ import org.jackhuang.hmcl.setting.Theme;
 import org.jackhuang.hmcl.ui.Controllers;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.ui.SVG;
+import org.jackhuang.hmcl.ui.construct.AnnouncementCard;
 import org.jackhuang.hmcl.ui.construct.MessageDialogPane;
 import org.jackhuang.hmcl.ui.construct.PopupMenu;
 import org.jackhuang.hmcl.ui.construct.TwoLineListItem;
@@ -63,6 +64,7 @@ import java.util.stream.IntStream;
 
 import static org.jackhuang.hmcl.setting.ConfigHolder.config;
 import static org.jackhuang.hmcl.ui.FXUtils.SINE;
+import static org.jackhuang.hmcl.util.i18n.I18n.getCurrentLocale;
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
 public final class MainPage extends StackPane implements DecoratorPage {
@@ -219,6 +221,10 @@ public final class MainPage extends StackPane implements DecoratorPage {
             return node;
         });
         Bindings.bindContent(menu.getContent(), versionNodes);
+    }
+
+    public MainPage() {
+        announcementPane.getChildren().add(new AnnouncementCard(i18n("pt.mainpage.hint.title"), i18n("pt.mainpage.hint.content")));
     }
 
     private void showUpdate(boolean show) {
